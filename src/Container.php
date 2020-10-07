@@ -4,26 +4,31 @@
 namespace App;
 
 
-use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 class Container implements ContainerInterface
 {
+    /**
+     * @var array $instances
+     */
+    private $instances = [];
 
     /**
      * @inheritDoc
      */
     public function get($id)
     {
-        // TODO: Implement get() method.
+        if (!$this->has($id)) {
+            $this->instances[$id] = new $id();
+        }
+        return $this->instances[$id];
     }
 
     /**
      * @inheritDoc
      */
-    public function has($id)
+    public function has($id): bool
     {
-        // TODO: Implement has() method.
+        return isset($this->instances[$id]);
     }
 }
