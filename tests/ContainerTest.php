@@ -5,7 +5,6 @@ namespace App\Tests;
 
 
 use App\Container;
-use App\NotFoundException;
 use App\Tests\Classes\Interfaces\FirstInterface;
 use App\Tests\Classes\Interfaces\SecondInterface;
 use App\Tests\Classes\Second;
@@ -25,73 +24,33 @@ class ContainerTest extends TestCase
         $this->container = new Container();
     }
 
-    public function testReflectionException(): void
-    {
-        $unknownClass = 'App\Tests\Unknown';
-
-        $this->expectException(NotFoundException::class);
-        $this->expectExceptionMessage(sprintf('Class %s does not exist', $unknownClass));
-        $this->container->get($unknownClass);
-    }
-
     public function testResolve(): void
     {
-        $this->assertInstanceOf(First::class, $this->container->get(First::class));
-    }
+        $this->container
+            ->addAlias(SecondInterface::class, Second::class)
+            ->addAlias(FirstInterface::class, First::class)
+        ;
 
-    public function testResolveConstructor(): void
-    {
-        $this->assertInstanceOf(Second::class, $this->container->get(Second::class));
-    }
+        $this->assertInstanceOf(Second::class, $this->container->get(SecondInterface::class));
 
-    public function testResolveManyConstructor(): void
-    {
-        $this->assertInstanceOf(Three::class, $this->container->get(Three::class));
-    }
+        $three1 = $this->container->get(Three::class);
+        $three2 = $this->container->get(Three::class);
 
-    public function testSingleton(): void
-    {
-        $first1 = $this->container->get(First::class);
-        $first2 = $this->container->get(First::class);
-        $this->assertEquals(spl_object_id($first1), spl_object_id($first2));
-
-
-        $second1 = $this->container->get(Second::class);
-        $second2 = $this->container->get(Second::class);
-        $this->assertEquals(spl_object_id($second1), spl_object_id($second2));
-    }
-
-    public function testResolveInterface(): void
-    {
-        $this->container->addAlias(FirstInterface::class, First::class);
-        $this->assertInstanceOf(First::class, $this->container->get(FirstInterface::class));
-    }
-
-    public function testResolveInterfaceException(): void
-    {
-        $this->expectException(NotFoundException::class);
-        $this->assertInstanceOf(First::class, $this->container->get(FirstInterface::class));
+        $this->assertEquals(spl_object_id($three1), spl_object_id($three2));
     }
 
     public function testDefinition()
     {
-        $definition = $this->container->getDefinition(First::class);
-        $this->assertEquals(First::class, $definition->getId());
-        $this->assertTrue($definition->isShare());
-        $this->assertIsArray($definition->getAliases());
-        $this->assertCount(0, $definition->getAliases());
-        $this->assertIsArray($definition->getDependencies());
-        $this->assertCount(0, $definition->getDependencies());
-
-    }
-
-    public function testDefinitionInterface()
-    {
         $this->container->addAlias(FirstInterface::class, First::class);
-        $definition = $this->container->getDefinition(FirstInterface::class);
-        $this->assertEquals(First::class, $definition->getId());
-        $this->assertIsArray($definition->getAliases());
-        $this->assertCount(1, $definition->getAliases());
-        $this->assertContains(FirstInterface::class, $definition->getAliases());
+        $this->container->getDefinition(FirstInterface::class);
+
+        $definition = $this->container->getDefinition(Second::class);
+        $this->assertCount(2, $definition->getDependencies());
+
+        $definition = $this->container
+            ->addAlias(SecondInterface::class, Second::class)
+            ->getDefinition(SecondInterface::class);
+
+        $this->assertArrayHasKey(SecondInterface::class, $definition->getAliases());
     }
 }

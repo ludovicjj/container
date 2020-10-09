@@ -12,9 +12,9 @@ class Definition
     private $id;
 
     /**
-     * @var bool $share
+     * @var bool $shared
      */
-    private $share;
+    private $shared;
 
     /**
      * @var string[] $aliases
@@ -28,12 +28,12 @@ class Definition
 
     public function __construct(
         string $id,
-        bool $share = true,
+        bool $shared = true,
         array $aliases = [],
         array $dependencies = []
     ) {
         $this->id = $id;
-        $this->share = $share;
+        $this->shared = $shared;
         $this->aliases = $aliases;
         $this->dependencies = $dependencies;
     }
@@ -49,9 +49,19 @@ class Definition
     /**
      * @return bool
      */
-    public function isShare(): bool
+    public function isShared(): bool
     {
-        return $this->share;
+        return $this->shared;
+    }
+
+    /**
+     * @param bool $shared
+     * @return $this
+     */
+    public function setShared(bool $shared): self
+    {
+        $this->shared = $shared;
+        return $this;
     }
 
     /**

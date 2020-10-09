@@ -36,7 +36,6 @@ class Container implements ContainerInterface
         if (!isset($this->definitions[$id])) {
             $this->register($id);
         }
-
         return $this->definitions[$id];
     }
 
@@ -52,22 +51,23 @@ class Container implements ContainerInterface
 
         if ($reflectionClass->isInterface()) {
             $this->register($this->aliases[$id]);
-            $this->definitions[$id] = $this->definitions[$this->aliases[$id]];
+            // Add interface to definitions
+            $this->definitions[$id] = &$this->definitions[$this->aliases[$id]];
 
             return $this;
         }
 
-        if ($this->hasConstructor($reflectionClass)) {
+        if ($reflectionClass->getConstructor() !== null) {
             $dependencies = array_map(function(ReflectionParameter $parameter) {
-                if ($parameter->getClass()) {
-                    return $this->getDefinition($parameter->getClass()->getName());
-                } else {
-                    return $parameter->getName();
-                }
+                return ($parameter->getClass())
+                    ? $this->getDefinition($parameter->getClass()->getName())
+                    : $parameter->getName();
             }, $reflectionClass->getConstructor()->getParameters());
         }
 
-        $aliases = array_keys($this->aliases, $id);
+        $aliases = array_filter($this->aliases, function($alias) use ($id) {
+            return $alias === $id;
+        }, 0);
 
         $definition = new Definition($id, true, $aliases, $dependencies);
         $this->definitions[$id] = $definition;
@@ -80,106 +80,41 @@ class Container implements ContainerInterface
      */
     public function get($id)
     {
-        try {
-            // singleton
-            if (!$this->has($id)) {
-                $reflectionClass = new ReflectionClass($id);
-
-                // resolve interface service
-                if ($reflectionClass->isInterface()) {
-                    return $this->resolveInterface($reflectionClass);
-                }
-
-                // register service as definition with dependencies
-                $this->register($id);
-
-                // resolve constructor service
-                if ($this->hasConstructor($reflectionClass)) {
-                    $this->resolveConstructor($reflectionClass);
-                } else {
-                    $this->resolve($reflectionClass);
-                }
-            }
-
-            return $this->instances[$id];
-
-        } catch (ReflectionException $exception) {
-            throw new NotFoundException($exception->getMessage());
+        if (!$this->has($id)) {
+            $this->instances[$id] = $this->resolve($id);
         }
+
+        return $this->instances[$id];
     }
 
     /**
-     * @inheritDoc
-     */
-    public function has($id): bool
-    {
-        return isset($this->instances[$id]);
-    }
-
-
-    /**
-     * @param ReflectionClass $reflectionClass
-     * @return bool
-     */
-    private function hasConstructor(ReflectionClass $reflectionClass): bool
-    {
-        return $reflectionClass->hasMethod('__construct');
-    }
-
-    /**
-     * @param ReflectionClass $reflectionClass
-     */
-    private function resolve(ReflectionClass $reflectionClass): void
-    {
-        $id = $reflectionClass->getName();
-        $this->instances[$id] =  $reflectionClass->newInstance();
-    }
-
-    /**
-     * @param ReflectionClass $reflectionClass
-     */
-    private function resolveConstructor(ReflectionClass $reflectionClass): void
-    {
-        $id = $reflectionClass->getName();
-        $constructor = $reflectionClass->getConstructor();
-        $parameters = $this->resolveConstructorParameters($constructor->getParameters());
-        $this->instances[$id] = $reflectionClass->newInstanceArgs($parameters);
-    }
-
-    /**
-     * @param ReflectionParameter[] $parameters
-     * @return array
-     */
-    private function resolveConstructorParameters(array $parameters): array
-    {
-        return array_map(
-            function (ReflectionParameter $parameter) {
-                if ($parameter->getClass()) {
-                    return $this->get($parameter->getClass()->getName());
-                } else {
-                    return $parameter->getName();
-                }
-            },
-            $parameters
-        );
-    }
-
-    /**
-     * @param ReflectionClass $reflectionClass
+     * @param string $id
      * @return Object
-     * @throws NotFoundException
+     * @throws ReflectionException
      */
-    private function resolveInterface(ReflectionClass $reflectionClass)
+    private function resolve(string $id): Object
     {
-        $id = $reflectionClass->getName();
+        $reflectionClass = new ReflectionClass($id);
 
-        if (isset($this->aliases[$id])) {
-            return $this->get($this->aliases[$id]);
-        } else {
-            throw new NotFoundException(sprintf('Not found class %s', $reflectionClass->getName()));
+        if ($reflectionClass->isInterface()) {
+            return $this->resolve($this->aliases[$id]);
         }
-    }
 
+        $this->register($id);
+
+        $constructor = $reflectionClass->getConstructor();
+
+        if ($constructor === null) {
+            return $reflectionClass->newInstance();
+        }
+        $arguments = array_map(function (ReflectionParameter $parameter) {
+            return ($parameter->getClass())
+                ? $this->get($parameter->getClass()->getName())
+                : $parameter->getName();
+            }, $constructor->getParameters());
+
+        return $reflectionClass->newInstanceArgs($arguments);
+    }
 
     /**
      * @param string $id
@@ -191,5 +126,13 @@ class Container implements ContainerInterface
         $this->aliases[$id] = $class;
 
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function has($id): bool
+    {
+        return isset($this->instances[$id]);
     }
 }
