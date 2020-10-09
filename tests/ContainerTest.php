@@ -11,6 +11,7 @@ use App\Tests\Classes\Second;
 use App\Tests\Classes\First;
 use App\Tests\Classes\Three;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 
 class ContainerTest extends TestCase
 {
@@ -39,7 +40,10 @@ class ContainerTest extends TestCase
         $this->assertEquals(spl_object_id($three1), spl_object_id($three2));
     }
 
-    public function testDefinition()
+    /**
+     * @throws ReflectionException
+     */
+    public function testDefinition(): void
     {
         $this->container->addAlias(FirstInterface::class, First::class);
         $this->container->getDefinition(FirstInterface::class);
@@ -54,7 +58,7 @@ class ContainerTest extends TestCase
         $this->assertArrayHasKey(SecondInterface::class, $definition->getAliases());
     }
 
-    public function testShared()
+    public function testShared(): void
     {
         $this->container->addAlias(FirstInterface::class, First::class);
 
@@ -64,7 +68,10 @@ class ContainerTest extends TestCase
         $this->assertEquals(spl_object_id($three1), spl_object_id($three2));
     }
 
-    public function testNotShared()
+    /**
+     * @throws ReflectionException
+     */
+    public function testNotShared(): void
     {
         $this->container->getDefinition(First::class)->setShared(false);
 

@@ -26,7 +26,6 @@ class Container implements ContainerInterface
      */
     private $definitions = [];
 
-
     /**
      * @param string $id
      * @return Definition
