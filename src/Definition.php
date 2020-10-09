@@ -17,9 +17,9 @@ class Definition
     private $share;
 
     /**
-     * @var string|null $alias
+     * @var string[] $aliases
      */
-    private $alias;
+    private $aliases;
 
     /**
      * @var Definition[]
@@ -29,12 +29,44 @@ class Definition
     public function __construct(
         string $id,
         bool $share = true,
-        ?string $alias = null,
+        array $aliases = [],
         array $dependencies = []
     ) {
         $this->id = $id;
         $this->share = $share;
-        $this->alias = $alias;
+        $this->aliases = $aliases;
         $this->dependencies = $dependencies;
+    }
+
+    /**
+     * @return string
+     */
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShare(): bool
+    {
+        return $this->share;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAliases(): array
+    {
+        return $this->aliases;
+    }
+
+    /**
+     * @return Definition[]
+     */
+    public function getDependencies(): array
+    {
+        return $this->dependencies;
     }
 }

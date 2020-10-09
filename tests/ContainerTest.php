@@ -7,6 +7,7 @@ namespace App\Tests;
 use App\Container;
 use App\NotFoundException;
 use App\Tests\Classes\Interfaces\FirstInterface;
+use App\Tests\Classes\Interfaces\SecondInterface;
 use App\Tests\Classes\Second;
 use App\Tests\Classes\First;
 use App\Tests\Classes\Three;
@@ -70,5 +71,27 @@ class ContainerTest extends TestCase
     {
         $this->expectException(NotFoundException::class);
         $this->assertInstanceOf(First::class, $this->container->get(FirstInterface::class));
+    }
+
+    public function testDefinition()
+    {
+        $definition = $this->container->getDefinition(First::class);
+        $this->assertEquals(First::class, $definition->getId());
+        $this->assertTrue($definition->isShare());
+        $this->assertIsArray($definition->getAliases());
+        $this->assertCount(0, $definition->getAliases());
+        $this->assertIsArray($definition->getDependencies());
+        $this->assertCount(0, $definition->getDependencies());
+
+    }
+
+    public function testDefinitionInterface()
+    {
+        $this->container->addAlias(FirstInterface::class, First::class);
+        $definition = $this->container->getDefinition(FirstInterface::class);
+        $this->assertEquals(First::class, $definition->getId());
+        $this->assertIsArray($definition->getAliases());
+        $this->assertCount(1, $definition->getAliases());
+        $this->assertContains(FirstInterface::class, $definition->getAliases());
     }
 }

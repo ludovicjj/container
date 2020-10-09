@@ -17,9 +17,63 @@ class Container implements ContainerInterface
     private $instances = [];
 
     /**
-     * @var array $aliases
+     * @var string[] $aliases
      */
     private $aliases = [];
+
+    /**
+     * @var Definition[]
+     */
+    private $definitions = [];
+
+    /**
+     * @param string $id
+     * @return Definition
+     * @throws ReflectionException
+     */
+    public function getDefinition(string $id): Definition
+    {
+        if (!isset($this->definitions[$id])) {
+            $this->register($id);
+        }
+
+        return $this->definitions[$id];
+    }
+
+    /**
+     * @param string $id
+     * @return $this
+     * @throws ReflectionException
+     */
+    private function register(string $id): self
+    {
+        $reflectionClass = new ReflectionClass($id);
+        $dependencies = [];
+
+        if ($reflectionClass->isInterface()) {
+            $this->register($this->aliases[$id]);
+            $this->definitions[$id] = $this->definitions[$this->aliases[$id]];
+
+            return $this;
+        }
+
+        if ($this->hasConstructor($reflectionClass)) {
+            $dependencies = array_map(function(ReflectionParameter $parameter) {
+                if ($parameter->getClass()) {
+                    return $this->getDefinition($parameter->getClass()->getName());
+                } else {
+                    return $parameter->getName();
+                }
+            }, $reflectionClass->getConstructor()->getParameters());
+        }
+
+        $aliases = array_keys($this->aliases, $id);
+
+        $definition = new Definition($id, true, $aliases, $dependencies);
+        $this->definitions[$id] = $definition;
+
+        return $this;
+    }
 
     /**
      * @inheritDoc
@@ -27,13 +81,19 @@ class Container implements ContainerInterface
     public function get($id)
     {
         try {
+            // singleton
             if (!$this->has($id)) {
                 $reflectionClass = new ReflectionClass($id);
 
+                // resolve interface service
                 if ($reflectionClass->isInterface()) {
                     return $this->resolveInterface($reflectionClass);
                 }
 
+                // register service as definition with dependencies
+                $this->register($id);
+
+                // resolve constructor service
                 if ($this->hasConstructor($reflectionClass)) {
                     $this->resolveConstructor($reflectionClass);
                 } else {
@@ -78,7 +138,7 @@ class Container implements ContainerInterface
     /**
      * @param ReflectionClass $reflectionClass
      */
-    private function resolveConstructor(ReflectionClass $reflectionClass)
+    private function resolveConstructor(ReflectionClass $reflectionClass): void
     {
         $id = $reflectionClass->getName();
         $constructor = $reflectionClass->getConstructor();
@@ -129,6 +189,7 @@ class Container implements ContainerInterface
     public function addAlias(string $id, string $class): self
     {
         $this->aliases[$id] = $class;
+
         return $this;
     }
 }

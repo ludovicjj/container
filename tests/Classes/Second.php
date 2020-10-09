@@ -4,12 +4,14 @@
 namespace App\Tests\Classes;
 
 
-class Second
+use App\Tests\Classes\Interfaces\SecondInterface;
+
+class Second implements SecondInterface
 {
     /**
-     * @var First $simple
+     * @var First $first
      */
-    private $simple;
+    private $first;
 
     /**
      * @var string $prefix
@@ -17,10 +19,10 @@ class Second
     private $prefix;
 
     public function __construct(
-        First $simple,
+        First $first,
         $prefix = 'many_'
     ) {
-        $this->simple = $simple;
+        $this->first = $first;
         $this->prefix = $prefix;
     }
 
