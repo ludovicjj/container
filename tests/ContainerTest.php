@@ -53,4 +53,24 @@ class ContainerTest extends TestCase
 
         $this->assertArrayHasKey(SecondInterface::class, $definition->getAliases());
     }
+
+    public function testShared()
+    {
+        $this->container->addAlias(FirstInterface::class, First::class);
+
+        $three1 = $this->container->get(Three::class);
+        $three2 = $this->container->get(Three::class);
+
+        $this->assertEquals(spl_object_id($three1), spl_object_id($three2));
+    }
+
+    public function testNotShared()
+    {
+        $this->container->getDefinition(First::class)->setShared(false);
+
+        $first1 = $this->container->get(First::class);
+        $first2 = $this->container->get(First::class);
+
+        $this->assertNotEquals(spl_object_id($first1), spl_object_id($first2));
+    }
 }

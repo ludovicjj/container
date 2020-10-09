@@ -26,6 +26,7 @@ class Container implements ContainerInterface
      */
     private $definitions = [];
 
+
     /**
      * @param string $id
      * @return Definition
@@ -81,7 +82,13 @@ class Container implements ContainerInterface
     public function get($id)
     {
         if (!$this->has($id)) {
-            $this->instances[$id] = $this->resolve($id);
+            $instance = $this->resolve($id);
+
+            if (!$this->getDefinition($id)->isShared()) {
+                return $instance;
+            }
+
+            $this->instances[$id] = $instance;
         }
 
         return $this->instances[$id];
@@ -100,7 +107,10 @@ class Container implements ContainerInterface
             return $this->resolve($this->aliases[$id]);
         }
 
-        $this->register($id);
+        // Prevent reset definitions
+        if (!isset($this->definitions[$id])) {
+            $this->register($id);
+        }
 
         $constructor = $reflectionClass->getConstructor();
 
