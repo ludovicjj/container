@@ -4,6 +4,10 @@
 namespace App;
 
 
+use Psr\Container\ContainerInterface;
+use ReflectionClass;
+use ReflectionParameter;
+
 class Definition
 {
     /**
@@ -26,6 +30,11 @@ class Definition
      */
     private $dependencies;
 
+    /**
+     * @var ReflectionClass
+     */
+    private $reflectionClass;
+
     public function __construct(
         string $id,
         bool $shared = true,
@@ -36,6 +45,7 @@ class Definition
         $this->shared = $shared;
         $this->aliases = $aliases;
         $this->dependencies = $dependencies;
+        $this->reflectionClass = new ReflectionClass($id);
     }
 
     /**
@@ -78,5 +88,34 @@ class Definition
     public function getDependencies(): array
     {
         return $this->dependencies;
+    }
+
+    /**
+     * @return ReflectionClass
+     */
+    public function getReflectionClass(): ReflectionClass
+    {
+        return $this->reflectionClass;
+    }
+
+    public function newInstance(ContainerInterface $container): object
+    {
+        $reflectionClass = $this->reflectionClass;
+        $constructor = $reflectionClass->getConstructor();
+
+        if ($constructor === null) {
+            return $reflectionClass->newInstance();
+        }
+
+        $arguments = array_map(
+            function (ReflectionParameter $parameter) use ($container) {
+                return ($parameter->getClass())
+                    ? $container->get($parameter->getClass()->getName())
+                    : $parameter->getName();
+            },
+            $constructor->getParameters()
+        );
+
+        return $reflectionClass->newInstanceArgs($arguments);
     }
 }
