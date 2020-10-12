@@ -6,7 +6,7 @@ namespace App\Tests\Classes;
 
 class Three
 {
-    public function __construct(Second $many)
+    public function __construct(Second $second)
     {
 
     }
