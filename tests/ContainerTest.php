@@ -45,16 +45,16 @@ class ContainerTest extends TestCase
      */
     public function testDefinition(): void
     {
-        $this->container->addAlias(FirstInterface::class, First::class);
-        $this->container->getDefinition(FirstInterface::class);
+        $this->container
+            ->addAlias(FirstInterface::class, First::class)
+            ->addAlias(SecondInterface::class, Second::class)
+        ;
 
         $definition = $this->container->getDefinition(Second::class);
+        $this->assertEquals(Second::class, $definition->getId());
         $this->assertCount(2, $definition->getDependencies());
 
-        $definition = $this->container
-            ->addAlias(SecondInterface::class, Second::class)
-            ->getDefinition(SecondInterface::class);
-
+        $definition = $this->container->getDefinition(SecondInterface::class);
         $this->assertArrayHasKey(SecondInterface::class, $definition->getAliases());
     }
 
