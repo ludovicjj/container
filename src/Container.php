@@ -28,10 +28,10 @@ class Container implements ContainerInterface
 
     /**
      * @param string $id
-     *
+     * @return Definition
      * @throws ReflectionException
      */
-    public function getDefinition(string $id)
+    public function getDefinition(string $id): Definition
     {
         if (!isset($this->definitions[$id])) {
             $this->register($id);
@@ -81,7 +81,7 @@ class Container implements ContainerInterface
     public function get($id)
     {
         if (!$this->has($id)) {
-            $instance = $this->resolve($id);
+            $instance = $this->getDefinition($id)->newInstance($this);
 
             if (!$this->getDefinition($id)->isShared()) {
                 return $instance;
@@ -91,18 +91,6 @@ class Container implements ContainerInterface
         }
 
         return $this->instances[$id];
-    }
-
-    /**
-     * @param string $id
-     * @return Object
-     * @throws ReflectionException
-     */
-    private function resolve(string $id): Object
-    {
-        $definition = $this->getDefinition($id);
-
-        return $definition->newInstance($this);
     }
 
     /**
