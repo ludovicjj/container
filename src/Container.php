@@ -28,10 +28,10 @@ class Container implements ContainerInterface
 
     /**
      * @param string $id
-     * @return Definition
+     *
      * @throws ReflectionException
      */
-    public function getDefinition(string $id): Definition
+    public function getDefinition(string $id)
     {
         if (!isset($this->definitions[$id])) {
             $this->register($id);
@@ -100,29 +100,9 @@ class Container implements ContainerInterface
      */
     private function resolve(string $id): Object
     {
-        $reflectionClass = new ReflectionClass($id);
+        $definition = $this->getDefinition($id);
 
-        if ($reflectionClass->isInterface()) {
-            return $this->resolve($this->aliases[$id]);
-        }
-
-        // Prevent reset definitions
-        if (!isset($this->definitions[$id])) {
-            $this->register($id);
-        }
-
-        $constructor = $reflectionClass->getConstructor();
-
-        if ($constructor === null) {
-            return $reflectionClass->newInstance();
-        }
-        $arguments = array_map(function (ReflectionParameter $parameter) {
-            return ($parameter->getClass())
-                ? $this->get($parameter->getClass()->getName())
-                : $parameter->getName();
-            }, $constructor->getParameters());
-
-        return $reflectionClass->newInstanceArgs($arguments);
+        return $definition->newInstance($this);
     }
 
     /**
