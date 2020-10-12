@@ -90,14 +90,6 @@ class Definition
         return $this->dependencies;
     }
 
-    /**
-     * @return ReflectionClass
-     */
-    public function getReflectionClass(): ReflectionClass
-    {
-        return $this->reflectionClass;
-    }
-
     public function newInstance(ContainerInterface $container): object
     {
         $reflectionClass = $this->reflectionClass;
