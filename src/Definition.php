@@ -99,15 +99,17 @@ class Definition
             return $reflectionClass->newInstance();
         }
 
-        $arguments = array_map(
-            function (ReflectionParameter $parameter) use ($container) {
-                return ($parameter->getClass())
-                    ? $container->get($parameter->getClass()->getName())
-                    : $parameter->getName();
-            },
-            $constructor->getParameters()
-        );
+        $parameters = array_map(function (ReflectionParameter  $parameter) use ($container) {
+            if ($parameter->getClass()) {
+                return $container->get($parameter->getClass()->getName());
+            }
+            if ($parameter->isOptional()) {
+                return $parameter->getName();
+            }
 
-        return $reflectionClass->newInstanceArgs($arguments);
+            return $container->getParameter($parameter->getName());
+        }, $constructor->getParameters());
+
+        return $reflectionClass->newInstanceArgs($parameters);
     }
 }
