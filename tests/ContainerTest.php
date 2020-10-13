@@ -5,6 +5,7 @@ namespace App\Tests;
 
 
 use App\Container;
+use App\Tests\Classes\Database;
 use App\Tests\Classes\Interfaces\FirstInterface;
 use App\Tests\Classes\Interfaces\SecondInterface;
 use App\Tests\Classes\Second;
@@ -52,7 +53,7 @@ class ContainerTest extends TestCase
 
         $definition = $this->container->getDefinition(Second::class);
         $this->assertEquals(Second::class, $definition->getId());
-        $this->assertCount(2, $definition->getDependencies());
+        $this->assertCount(1, $definition->getDependencies());
 
         $definition = $this->container->getDefinition(SecondInterface::class);
         $this->assertArrayHasKey(SecondInterface::class, $definition->getAliases());
@@ -79,5 +80,17 @@ class ContainerTest extends TestCase
         $first2 = $this->container->get(First::class);
 
         $this->assertNotEquals(spl_object_id($first1), spl_object_id($first2));
+    }
+
+    public function testParameters(): void
+    {
+        $this->container
+            ->addParameter('dbHost', "localhost")
+            ->addParameter('dbName', "my_database")
+            ->addParameter('dbUser', "root")
+            ->addParameter('dbPassword', "")
+        ;
+        $database = $this->container->get(Database::class);
+        $this->assertInstanceOf(Database::class, $database);
     }
 }
