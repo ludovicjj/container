@@ -12,6 +12,11 @@ use ReflectionParameter;
 class Container implements ContainerInterface
 {
     /**
+     * @var array
+     */
+    private $parameters = [];
+
+    /**
      * @var array $instances
      */
     private $instances = [];
@@ -58,14 +63,20 @@ class Container implements ContainerInterface
         }
 
         if ($reflectionClass->getConstructor() !== null) {
-            $dependencies = array_map(function(ReflectionParameter $parameter) {
-                return ($parameter->getClass())
-                    ? $this->getDefinition($parameter->getClass()->getName())
-                    : $parameter->getName();
-            }, $reflectionClass->getConstructor()->getParameters());
+            $parameters = $reflectionClass->getConstructor()->getParameters();
+
+            // filter no scalar parameters
+            $parameters = array_filter($parameters, function (ReflectionParameter $parameter) {
+                return $parameter->getClass();
+            });
+
+            // Get dependencies to no scalar parameters
+            $dependencies = array_map(function (ReflectionParameter $parameter) {
+                return $this->getDefinition($parameter->getClass()->getName());
+            }, $parameters);
         }
 
-        $aliases = array_filter($this->aliases, function($alias) use ($id) {
+        $aliases = array_filter($this->aliases, function ($alias) use ($id) {
             return $alias === $id;
         }, 0);
 
@@ -103,6 +114,26 @@ class Container implements ContainerInterface
         $this->aliases[$id] = $class;
 
         return $this;
+    }
+
+    /**
+     * @param string $id
+     * @param mixed $value
+     * @return $this
+     */
+    public function addParameter(string $id, $value): self
+    {
+        $this->parameters[$id] = $value;
+        return $this;
+    }
+
+    /**
+     * @param string $id
+     * @return mixed
+     */
+    public function getParameter(string $id)
+    {
+        return $this->parameters[$id];
     }
 
     /**
