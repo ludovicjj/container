@@ -49,4 +49,12 @@ interface ContainerInterface extends PsrContainerInterface
      * @return mixed
      */
     public function getParameter(string $id);
+
+    /**
+     * Get value of alias
+     *
+     * @param string $id
+     * @return string
+     */
+    public function getAlias(string $id): string;
 }

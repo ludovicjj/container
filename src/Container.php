@@ -32,6 +32,7 @@ class Container implements ContainerInterface
      * @param string $id
      * @return Definition
      * @throws ReflectionException
+     * @throws NotFoundException
      */
     public function getDefinition(string $id): Definition
     {
@@ -45,6 +46,7 @@ class Container implements ContainerInterface
      * @param string $id
      * @return $this
      * @throws ReflectionException
+     * @throws NotFoundException
      */
     public function register(string $id): ContainerInterface
     {
@@ -52,9 +54,10 @@ class Container implements ContainerInterface
         $dependencies = [];
 
         if ($reflectionClass->isInterface()) {
-            $this->register($this->aliases[$id]);
+            $alias = $this->getAlias($id);
+            $this->register($alias);
             // Add interface to definitions
-            $this->definitions[$id] = &$this->definitions[$this->aliases[$id]];
+            $this->definitions[$id] = &$this->definitions[$alias];
 
             return $this;
         }
@@ -88,6 +91,9 @@ class Container implements ContainerInterface
     public function get($id)
     {
         if (!$this->has($id)) {
+            if (!class_exists($id) && !interface_exists($id)) {
+                throw new NotFoundException();
+            }
             $instance = $this->getDefinition($id)->newInstance($this);
 
             if (!$this->getDefinition($id)->isShared()) {
@@ -114,6 +120,19 @@ class Container implements ContainerInterface
 
     /**
      * @param string $id
+     * @return string
+     * @throws NotFoundException
+     */
+    public function getAlias(string $id): string
+    {
+        if (!isset($this->aliases[$id])) {
+            throw new NotFoundException();
+        }
+        return $this->aliases[$id];
+    }
+
+    /**
+     * @param string $id
      * @param mixed $value
      * @return $this
      */
@@ -125,10 +144,14 @@ class Container implements ContainerInterface
 
     /**
      * @param string $id
+     * @throws NotFoundException
      * @return mixed
      */
     public function getParameter(string $id)
     {
+        if (!isset($this->parameters[$id])) {
+            throw new NotFoundException();
+        }
         return $this->parameters[$id];
     }
 

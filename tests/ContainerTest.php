@@ -12,6 +12,7 @@ use App\Tests\Classes\Second;
 use App\Tests\Classes\First;
 use App\Tests\Classes\Three;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionException;
 
 class ContainerTest extends TestCase
@@ -92,5 +93,23 @@ class ContainerTest extends TestCase
         ;
         $database = $this->container->get(Database::class);
         $this->assertInstanceOf(Database::class, $database);
+    }
+
+    public function testClassNotFoundException()
+    {
+        $this->expectException(NotFoundExceptionInterface::class);
+        $this->container->get(Bar::class);
+    }
+
+    public function testParameterNotFoundException()
+    {
+        $this->expectException(NotFoundExceptionInterface::class);
+        $this->container->get(Database::class);
+    }
+
+    public function testAliasNotFoundException()
+    {
+        $this->expectException(NotFoundExceptionInterface::class);
+        $this->container->get(FirstInterface::class);
     }
 }
