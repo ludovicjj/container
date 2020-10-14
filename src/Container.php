@@ -1,10 +1,7 @@
 <?php
 
-
 namespace App;
 
-
-use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionParameter;
@@ -49,7 +46,7 @@ class Container implements ContainerInterface
      * @return $this
      * @throws ReflectionException
      */
-    private function register(string $id): self
+    public function register(string $id): ContainerInterface
     {
         $reflectionClass = new ReflectionClass($id);
         $dependencies = [];
@@ -109,7 +106,7 @@ class Container implements ContainerInterface
      * @param string $class
      * @return $this
      */
-    public function addAlias(string $id, string $class): self
+    public function addAlias(string $id, string $class): ContainerInterface
     {
         $this->aliases[$id] = $class;
 
@@ -121,7 +118,7 @@ class Container implements ContainerInterface
      * @param mixed $value
      * @return $this
      */
-    public function addParameter(string $id, $value): self
+    public function addParameter(string $id, $value): ContainerInterface
     {
         $this->parameters[$id] = $value;
         return $this;
