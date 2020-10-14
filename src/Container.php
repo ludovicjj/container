@@ -77,8 +77,7 @@ class Container implements ContainerInterface
             return $alias === $id;
         }, 0);
 
-        $definition = new Definition($id, true, $aliases, $dependencies);
-        $this->definitions[$id] = $definition;
+        $this->definitions[$id] = new Definition($id, true, $aliases, $dependencies);
 
         return $this;
     }
