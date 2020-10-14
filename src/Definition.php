@@ -3,8 +3,6 @@
 
 namespace App;
 
-
-use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionParameter;
 
