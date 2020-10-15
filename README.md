@@ -1,6 +1,6 @@
 # Conteneur de dépendance
 
-Création d'un conteneur d'injection de dépendance implémentant l'interfaces du PSR-11 
+Création d'un conteneur d'injection de dépendance implémentant l'interfaces du PSR11 
 et utilisant l'API de reflection de PHP.
 
 ## Capacité du conteneur
@@ -13,15 +13,19 @@ et utilisant l'API de reflection de PHP.
 
 ## Interface
 
-Pour instancier une classe à partir d'un interface, il faudra indiquer à quelle
-classe est rattaché cette interface. 
-Sinon le conteneur renverra une exception de type ```NotFoundExceptionInterface```(PSR11).
+Pour instancier une classe à partir d'une interface, il faudra indiquer à quelle
+classe est rattachée cette interface. 
+Sinon le conteneur renverra une exception de type ```NotFoundExceptionInterface``` (PSR11).
 
-Pour définir une classe à une interface il faudra procéder de la façon suivante :
+Pour associer une interface à une classe, il faudra procéder de la façon suivante :
 
 ```
 $container = new container();
-$container->addAlias(FooInterface::class, Foo::class):
+
+// Association Interface/Class
+$container->addAlias(FooInterface::class, Foo::class);
+
+// Création de l'instance
 $container->get(FooInterface::class);
 ```
 
@@ -29,18 +33,22 @@ La methode ```addAlias()``` utilise le modèle Fluent.
 
 ## Paramètre
 
-Pour instancier une classe avec des paramètres non définit, il faudra indiquer la valeur de
-chaque paramètres. 
-Sinon le conteneur renverra une exception de type ```NotFoundExceptionInterface```(PSR11).
+Pour instancier une classe avec des paramètres non optionnels, il faudra indiquer la valeur de
+chaque paramètre. 
+Sinon le conteneur renverra une exception de type ```NotFoundExceptionInterface``` (PSR11).
 
-Pour définir une valeur à un paramètre il faudra procéder de la façon suivante :
+Pour associer une valeur à un paramètre, il faudra procéder de la façon suivante :
 
 ```
 $container = new container();
+
+// Association paramètre/valeur
 $container
     ->addParameter('name', 'John')
     ->addParameter('surname', 'Doe');
-$container->get(FooInterface::class);
+
+// Création de l'instance
+$container->get(Bar::class);
 ```
 
 La methode ```addParameter()``` utilise le modèle Fluent.
